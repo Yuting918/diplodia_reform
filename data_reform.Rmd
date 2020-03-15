@@ -181,14 +181,6 @@ z025_m19_mp1$coverage_1[z025_m19_mp1$coverage_1 == 0] <- NA
 # it is okay to combine the two locations together for a popualation
 tbbc3_19 <- rbind(tbbc3_c19_mp1, tbbc3_m19_mp1)
 z025_19 <- rbind(z025_c19_mp1, z025_m19_mp1)
-tbbc3_19 <- na.omit(tbbc3_19)
-z025_19 <- na.omit(z025_19)
-
-tbbc3_19$coverage_1 <- tbbc3_19$coverage
-z025_19$coverage_1 <- z025_19$coverage
-
-tbbc3_19$coverage_1[tbbc3_19$coverage_1 == 0] <- NA
-z025_19$coverage_1[z025_19$coverage_1 == 0] <- NA
 ```
 
 
@@ -222,16 +214,18 @@ library(dplyr)
 # get the mean of tbbc3 population in 2018 
 tbbc3_18_mean <- aggregate(value.cvt~plot_id, data =tbbc3_18_conv, mean)
 tbbc3_18_mean1 <- aggregate(value.cvt1~plot_id, data =tbbc3_18_conv, mean)
-tbbc3_18_mean %>% rename(mean = value.cvt) -> tbbc3_18_mean
-tbbc3_18_mean1 %>% rename(mean1 = value.cvt1) -> tbbc3_18_mean1
-tbbc3_18_mean <- merge(tbbc3_18_mean,tbbc3_18_mean1)
+tbbc3_18_mean %>% rename(mean = value.cvt) -> tbbc3_18_mean # 108 obs
+tbbc3_18_mean1 %>% rename(mean1 = value.cvt1) -> tbbc3_18_mean1 # 105 obs due to the missing data
+tbbc3_18_mean <- merge(x=tbbc3_18_mean,y=tbbc3_18_mean1, all.x = TRUE) # 108 obs in this way
+# the 0 in the mean 1 should be the true 0
+tbbc3_18_mean$mean1[is.na(tbbc3_18_mean$mean1)] <- 0
 
 # get the number of count of each plot (genotype) ONLY ONE REP and for each sepecfic value in the plot
 tbbc3_18_conv %>% 
   group_by(plot_id) %>% 
   mutate(plot_count=n()) -> tbbc3_18_conv
 
-# do not count the 0 as plot number
+# do not count the na as plot number
 tbbc3_18_conv %>% 
   group_by(plot_id) %>% 
   summarise(non_na_count = sum(!is.na(value.cvt1))) -> tbbc3_18_pc # plot count without the na
@@ -241,15 +235,12 @@ tbbc3_18_conv <- merge(x=tbbc3_18_conv, y=tbbc3_18_pc, by.x = "plot_id", by.y = 
 tbbc3_18_conv %>% 
              group_by(plot_id,value.cvt) %>% 
              mutate(value.cvt_cout = n()) -> tbbc3_18_conv
-tbbc3_18_conv %>% 
-             group_by(plot_id,value.cvt1) %>% 
-             mutate(value.cvt_cout1 = n()) -> tbbc3_18_conv
 
 # get the percentage (rate) of each count in r
 tbbc3_18_conv %>% 
   mutate(value.cvt_rate = value.cvt_cout/plot_count) -> tbbc3_18_conv
 tbbc3_18_conv %>% 
-  mutate(value.cvt_rate1 = value.cvt_cout1/non_na_count) -> tbbc3_18_conv
+  mutate(value.cvt_rate1 = value.cvt_cout/non_na_count) -> tbbc3_18_conv
 
 # find the incidence rate and the mummified rate
 # incidence date = 1 - value rate with 0%
@@ -260,13 +251,16 @@ tbbc3_18_incidence <- tbbc3_18_conv[tbbc3_18_conv$value.cvt==0,]
 tbbc3_18_incidence <- unique(tbbc3_18_incidence)
 tbbc3_18_incidence$incidence_rate <- 1 - tbbc3_18_incidence$value.cvt_rate
 # if we regard the 0 as na, we wont have incidence rata data out of it
+# the inf in the data should be the 0 actually, because the non_na_count is 0, means everything in that plot 0, which can be regareded as the true 0, besides, the plot with rating less than 5 had already beening deleted.
 
 # mummified rate # use 100%, or 8 as the indicator of totally mummified
 tbbc3_18_mummified <- tbbc3_18_conv[tbbc3_18_conv$value.cvt == 8,]
 tbbc3_18_mummified <- na.omit(tbbc3_18_mummified)
 tbbc3_18_mummified <- unique(tbbc3_18_mummified)
 rename(tbbc3_18_mummified, mummi_rate = value.cvt_rate) -> tbbc3_18_mummified
+# if we really need mummified 1? yes, we do, the data is missing and we have no means knowing if that is 0 or 8
 rename(tbbc3_18_mummified, mummi_rate1 = value.cvt_rate1) -> tbbc3_18_mummified
+# many missing data here due to the all 0. 
 
 # combine the three together
 # in the mummified, if there is NA, it should be 0 
@@ -291,7 +285,7 @@ tbbc3_18_agg$block <- coalesce(tbbc3_18_agg$block.x, tbbc3_18_agg$block.y)
 tbbc3_18_agg$plot_count <- coalesce(tbbc3_18_agg$plot_count.x, tbbc3_18_agg$plot_count.y)
 
 
-tbbc3_18_agg1 <- tbbc3_18_agg[,c(1,2,3,19,33:42)]
+tbbc3_18_agg1 <- tbbc3_18_agg[,c(1,2,3,18,31:40)]
 tbbc3_18_agg1 <- unique(tbbc3_18_agg1)
 # if the mean of a plot is NA, that plot is all 0, it is true 0 in a way
 
@@ -513,3 +507,4 @@ write.csv(tbbc3_18_agg, "/Users/qiuyuting/Documents/data_file/tbbc3_18_agg1.csv"
 write.csv(z025_19_agg1, "/Users/qiuyuting/Documents/data_file/z025_19_agg1.csv")
 write.csv(tbbc3_19_agg1, "/Users/qiuyuting/Documents/data_file/tbbc3_19_agg1.csv")
 ```
+
