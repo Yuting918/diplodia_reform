@@ -408,16 +408,16 @@ z025_19_agg1 <- z025_19_agg
 z025_19_agg1$mean1[is.nan(z025_19_agg1$mean1)] <- 0
 # remove the check lines and calculate the correlation coefficient
 
-z025_19_agg1 <- z025_19_agg[!z025_19_agg$`Plot Name` %in% c("M37W","M162W","Tx303","B73"),]
-cor.test(z025_19_agg1$mean, z025_19_agg1$mummi_rate, method = "pearson") # 0.3259189 
-cor.test(z025_19_agg1$mean, z025_19_agg1$incidence_rate, method = "pearson") # 0.8673955 
-cor.test(z025_19_agg1$mummi_rate, z025_19_agg1$incidence_rate, method = "pearson") # 0.198947  
+z025_19_agg2 <- z025_19_agg1[!z025_19_agg$`Plot Name` %in% c("M37W","M162W","Tx303","B73"),]
+cor.test(z025_19_agg2$mean, z025_19_agg2$mummi_rate, method = "pearson") # 0.3259189 
+cor.test(z025_19_agg2$mean, z025_19_agg2$incidence_rate, method = "pearson") # 0.8673955 
+cor.test(z025_19_agg2$mummi_rate, z025_19_agg2$incidence_rate, method = "pearson") # 0.198947  
 # all significant, but signidicant is not important
 
-cor.test(z025_19_agg1$mean1, z025_19_agg1$mummi_rate1, method = "pearson") #0.314348  
+cor.test(z025_19_agg2$mean1, z025_19_agg2$mummi_rate1, method = "pearson") #0.314348  
 
-cor.test(z025_19_agg1$mean, z025_19_agg1$severity_mean, method = "pearson") # 0.3738682  
-cor.test(z025_19_agg1$incidence_rate, z025_19_agg1$severity_mean, method = "pearson") # 0.1040342 
+cor.test(z025_19_agg2$mean, z025_19_agg2$severity_mean, method = "pearson") # 0.3738682  
+cor.test(z025_19_agg2$incidence_rate, z025_19_agg2$severity_mean, method = "pearson") # 0.1040342 
 # there is some correlation between the coverage and severity for eacg plot
 ```
 
@@ -513,15 +513,15 @@ tbbc3_19_agg1$mean1[is.nan(tbbc3_19_agg1$mean1)] <- 0
 
 
 # remove the check lines and calculate the correlation coefficient
-tbbc3_19_agg1 <- tbbc3_19_agg[!tbbc3_19_agg$`Plot Name` %in% checks,]
-cor.test(tbbc3_19_agg1$mean, tbbc3_19_agg1$mummi_rate, method = "pearson") # 0.09024929 
-cor.test(tbbc3_19_agg1$mean, tbbc3_19_agg1$incidence_rate, method = "pearson") # 0.8282704  
-cor.test(tbbc3_19_agg1$mummi_rate, tbbc3_19_agg1$incidence_rate, method = "pearson") #0.04993093   
+tbbc3_19_agg2 <- tbbc3_19_agg1[!tbbc3_19_agg$`Plot Name` %in% checks,]
+cor.test(tbbc3_19_agg2$mean, tbbc3_19_agg2$mummi_rate, method = "pearson") # 0.09024929 
+cor.test(tbbc3_19_agg2$mean, tbbc3_19_agg2$incidence_rate, method = "pearson") # 0.8282704  
+cor.test(tbbc3_19_agg2$mummi_rate, tbbc3_19_agg2$incidence_rate, method = "pearson") #0.04993093   
 # all significant, but signidicant is not important
 
-cor.test(tbbc3_19_agg1$mean1, tbbc3_19_agg1$mummi_rate1, method = "pearson") # 0.1243563   
+cor.test(tbbc3_19_agg2$mean1, tbbc3_19_agg2$mummi_rate1, method = "pearson") # 0.1243563   
 
-cor.test(tbbc3_19_agg1$mean, tbbc3_19_agg1$severity_mean, method = "pearson") # 0.2322353   
+cor.test(tbbc3_19_agg2$mean, tbbc3_19_agg2$severity_mean, method = "pearson") # 0.2322353   
 # there is some correlation between the coverage and severity for eacg plot
 ```
 
@@ -529,8 +529,8 @@ cor.test(tbbc3_19_agg1$mean, tbbc3_19_agg1$severity_mean, method = "pearson") # 
 
 # write out the results
 ```{r}
-write.csv(tbbc3_18_agg, "/Users/qiuyuting/Documents/data_file/tbbc3_18_agg1.csv")
-write.csv(z025_19_agg1, "/Users/qiuyuting/Documents/data_file/z025_19_agg1.csv")
-write.csv(tbbc3_19_agg1, "/Users/qiuyuting/Documents/data_file/tbbc3_19_agg1.csv")
+write.csv(tbbc3_18_agg1, "/Users/qiuyuting/Documents/data_file/tbbc3_18_agg.csv")
+write.csv(z025_19_agg1, "/Users/qiuyuting/Documents/data_file/z025_19_agg.csv")
+write.csv(tbbc3_19_agg1, "/Users/qiuyuting/Documents/data_file/tbbc3_19_agg.csv")
 ```
 
