@@ -525,6 +525,16 @@ cor.test(tbbc3_19_agg2$mean, tbbc3_19_agg2$severity_mean, method = "pearson") # 
 # there is some correlation between the coverage and severity for eacg plot
 ```
 
+# rename the columns
+```{r}
+rename(tbbc3_19_agg1, Range=Range.x) -> tbbc3_19_agg1
+rename(tbbc3_19_agg1, Row=Row.x) -> tbbc3_19_agg1
+rename(tbbc3_19_agg1, Field=Field.x) -> tbbc3_19_agg1
+
+rename(z025_19_agg1, Range=Range.x) -> z025_19_agg1
+rename(z025_19_agg1, Row=Row.x) -> z025_19_agg1
+rename(z025_19_agg1, Field=Field.x) -> z025_19_agg1
+```
 
 
 # write out the results
