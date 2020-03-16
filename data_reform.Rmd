@@ -65,10 +65,16 @@ tbbc3_c19_mp1 <- tbbc3_c19_mp[,c(1,3,5,6,7,9,13,22,23)]
 tbbc3_m19_mp1 <- tbbc3_m19_mp[,c(1,3,5,6,7,9,13,22,23)]
 ```
 
+# the real missing data need to be dealed for 2018
+```{r}
+tbbc3_18_mp[tbbc3_18_mp$value == ".",3] <- NA # replace the . with NA
+tbbc3_18_mp1 <- tbbc3_18_mp[,c(1,3,6,9,13,14,25,26)]
+tbbc3_18_mp1 <- na.omit(tbbc3_18_mp1)
+```
+
+
 # look at the 2018 dataset
 ```{r}
-tbbc3_18_mp1 <- tbbc3_18_mp[,c(1,3,6,9,13,14,25,26)]
-
 # seperate the count from the rating
 tbbc3_18_mp1_c <- tbbc3_18_mp1[tbbc3_18_mp1$measurement_parameter_id =="StandCount",]
 tbbc3_18_mp1_r <- tbbc3_18_mp1[tbbc3_18_mp1$measurement_parameter_id =="DiseasePCTRating1",]
@@ -87,7 +93,8 @@ tbbc3_18_mp1_r <- tbbc3_18_mp1_r[!tbbc3_18_mp1_r$plot_id %in% vc,]
 ```
 
 
-# 2019 data reformatting
+# 2019 data reformatting 
+# remove the real missing data
 ```{r}
 # seperate the coverage from the severity
 tbbc3_c19_mp1$coverage <- substr(tbbc3_c19_mp1$value,1,1)
@@ -103,17 +110,18 @@ tbbc3_c19_mp1$coverage <- as.numeric(tbbc3_c19_mp1$coverage)
 tbbc3_m19_mp1$coverage <- as.numeric(tbbc3_m19_mp1$coverage)
 z025_c19_mp1$coverage <- as.numeric(z025_c19_mp1$coverage)
 z025_m19_mp1$coverage <- as.numeric(z025_m19_mp1$coverage)
+
+# remove the real missing data in the dataframe
+tbbc3_c19_mp1 <- na.omit(tbbc3_c19_mp1)
+tbbc3_m19_mp1 <- na.omit(tbbc3_m19_mp1)
+z025_c19_mp1 <- na.omit(z025_c19_mp1)
+z025_m19_mp1 <- na.omit(z025_m19_mp1)
 ```
 
 # convert the 0-100% scale of 2018 data to 0-8 scale and to 1-9 scale with missing for 2018
 ```{r}
 library(dplyr)
-tbbc3_18_mp1_r1 <- na.omit(tbbc3_18_mp1_r) # there is NA in the dataframe
-tbbc3_18_conv <- tbbc3_18_mp1_r1
-tbbc3_18_conv[tbbc3_18_conv$value == ".",2] <- NA 
-
-# I think I can simply remove the NA in the dataframe since the original NA is not helpful at all 
-tbbc3_18_conv <- na.omit(tbbc3_18_conv)
+tbbc3_18_conv <- tbbc3_18_mp1_r
 tbbc3_18_conv$value <- as.numeric(as.character(tbbc3_18_conv$value))
 tbbc3_18_conv$value.cvt <- NA
 tbbc3_18_conv$value.cvt1 <- NA
@@ -173,6 +181,7 @@ tbbc3_m19_mp1$coverage_1 <- tbbc3_m19_mp1$coverage
 z025_c19_mp1$coverage_1 <- z025_c19_mp1$coverage
 z025_m19_mp1$coverage_1 <- z025_m19_mp1$coverage
 
+
 tbbc3_c19_mp1$coverage_1[tbbc3_c19_mp1$coverage_1 ==0] <- NA
 tbbc3_m19_mp1$coverage_1[tbbc3_m19_mp1$coverage_1 ==0] <- NA
 z025_c19_mp1$coverage_1[z025_c19_mp1$coverage_1 == 0] <- NA
@@ -203,6 +212,7 @@ boxplot(coverage_1 ~ z025_c19_check$`Plot Name`, data=z025_c19_check, main = "Bo
 tbbc3_18_check <- tbbc3_18_conv[tbbc3_18_conv$plot %in% checks,]
 boxplot(value.cvt1 ~ tbbc3_18_check$plot, data=tbbc3_18_check, main = "Boxplot of check lines in 2018 TBBC3 population", xlab = "check lines", ylab = "disease coverage")
 ```
+# the plots are not really the case, if i use the mean to plot, things can change, beacuse there can have real 0 that for the whole plot being coeded as na
 
 
 
@@ -321,7 +331,7 @@ z025_19 %>%
 z025_19 <- merge(x=z025_19, y=z025_19_pc, by.x = "Plot", by.y = "Plot", all.x = TRUE)
 
 # a count of 5 would be used as a cutoff 
-z025_19_1<- z025_19[z025_19$plot_count >= 5,]
+z025_19_1 <- z025_19[z025_19$plot_count >= 5,]
 
 # calculate the mean for each plot
 z025_19_1 %>%
@@ -338,12 +348,16 @@ z025_19_1 %>%
   group_by(Plot, coverage) %>%
   mutate(coverage_count = n()) -> z025_19_1
 
+z025_19_1 %>%
+  group_by(Plot, coverage_1) %>%
+  mutate(coverage_count1 = n()) -> z025_19_1
+
 # get the percentage of each count in a plot
 z025_19_1 %>% 
   mutate(coverage_rate = coverage_count/plot_count) -> z025_19_1
 # for non-na count 
 z025_19_1 %>% 
-  mutate(coverage_rate1 = coverage_count/non_na_count) -> z025_19_1
+  mutate(coverage_rate1 = coverage_count1/non_na_count) -> z025_19_1
 
 # find the incidence rate and mummified rate for each plot
 z025_19_incidence <- z025_19_1[z025_19_1$coverage == 0,]
@@ -362,11 +376,11 @@ rename(z025_19_mummi, mummi_rate1=coverage_rate1) -> z025_19_mummi #0 code as na
 # in the indicence, if there is NA, it should be 100% (we cannot find any value being 0)
 
 # combined mean with mummified
-z025_19_agg <- merge(x=z025_19_1,y=z025_19_mummi[,c(1,17,18)], by.x = "Plot", by.y = "Plot", all.x = TRUE, all.y = TRUE)
+z025_19_agg <- merge(x=z025_19_1,y=z025_19_mummi[,c(1,18,19)], by.x = "Plot", by.y = "Plot", all.x = TRUE, all.y = TRUE)
 z025_19_agg$mummi_rate[is.na(z025_19_agg$mummi_rate)] <- 0
 z025_19_agg$mummi_rate1[is.na(z025_19_agg$mummi_rate1)] <- 0
 # agrregate with incidence
-z025_19_agg <-  merge(x=z025_19_agg,y=z025_19_incidence[,c(1,19)], by.x = "Plot", by.y = "Plot", all.x = TRUE, all.y = TRUE)
+z025_19_agg <-  merge(x=z025_19_agg,y=z025_19_incidence[,c(1,20)], by.x = "Plot", by.y = "Plot", all.x = TRUE, all.y = TRUE)
 z025_19_agg$incidence_rate[is.na(z025_19_agg$incidence_rate)] <- 1
 
 ```
@@ -378,11 +392,11 @@ z025_19_agg$incidence_rate[is.na(z025_19_agg$incidence_rate)] <- 1
 z025_19_agg$severity_new <- NA
 for (i in 1:nrow(z025_19_agg)) {
   if (z025_19_agg[i,11] == "+"){
-    z025_19_agg[i,23] = "3"
+    z025_19_agg[i,24] = "3"
   } else if (z025_19_agg[i,11] == "-"){
-    z025_19_agg[i,23] = "1"
+    z025_19_agg[i,24] = "1"
   } 
-  else {z025_19_agg[i,23] = "2"}
+  else {z025_19_agg[i,24] = "2"}
 }
 z025_19_agg$severity_new <- as.numeric(as.character(z025_19_agg$severity_new))
 
@@ -390,7 +404,10 @@ z025_19_agg %>%
   group_by(Plot) %>%
   mutate(severity_mean = mean(severity_new)) -> z025_19_agg
 
+z025_19_agg1 <- z025_19_agg
+z025_19_agg1$mean1[is.nan(z025_19_agg1$mean1)] <- 0
 # remove the check lines and calculate the correlation coefficient
+
 z025_19_agg1 <- z025_19_agg[!z025_19_agg$`Plot Name` %in% c("M37W","M162W","Tx303","B73"),]
 cor.test(z025_19_agg1$mean, z025_19_agg1$mummi_rate, method = "pearson") # 0.3259189 
 cor.test(z025_19_agg1$mean, z025_19_agg1$incidence_rate, method = "pearson") # 0.8673955 
@@ -434,11 +451,15 @@ tbbc3_19_1 %>%
   group_by(Plot, coverage) %>%
   mutate(coverage_count = n()) -> tbbc3_19_1
 
+tbbc3_19_1 %>%
+  group_by(Plot, coverage_1) %>%
+  mutate(coverage_count1 = n()) -> tbbc3_19_1
+
 # get the percentage of each count in a plot
 tbbc3_19_1 %>% 
   mutate(coverage_rate = coverage_count/plot_count) -> tbbc3_19_1
 tbbc3_19_1 %>% 
-  mutate(coverage_rate1 = coverage_count/non_na_count) -> tbbc3_19_1
+  mutate(coverage_rate1 = coverage_count1/non_na_count) -> tbbc3_19_1
 
 # find the incidence rate and mummified rate for each plot
 tbbc3_19_incidence <- tbbc3_19_1[tbbc3_19_1$coverage == 0,]
@@ -456,7 +477,7 @@ rename(tbbc3_19_mummi, mummi_rate1=coverage_rate1) -> tbbc3_19_mummi
 # in the indicence, if there is NA, it should be 100% (we cannot find any value being 0)
 
 # combined mean with incidence
-tbbc3_19_agg <- merge(x=tbbc3_19_1,y=tbbc3_19_incidence[,c(1,19)], by.x = "Plot", by.y = "Plot", all.x = TRUE, all.y = TRUE)
+tbbc3_19_agg <- merge(x=tbbc3_19_1,y=tbbc3_19_incidence[,c(1,20)], by.x = "Plot", by.y = "Plot", all.x = TRUE, all.y = TRUE)
 tbbc3_19_agg$incidence_rate[is.na(tbbc3_19_agg$incidence_rate)] <- 1
 
 # aggregate with mummified
@@ -473,11 +494,11 @@ tbbc3_19_agg$severity_new <- NA
 # replace the severity with three levels "L(less) U(usual) M(more)"
 for (i in 1:nrow(tbbc3_19_agg)) {
   if (tbbc3_19_agg[i,11] == "+"){
-    tbbc3_19_agg[i,23] = "3"
+    tbbc3_19_agg[i,24] = "3"
   } else if (tbbc3_19_agg[i,11] == "-"){
-    tbbc3_19_agg[i,23] = "1"
+    tbbc3_19_agg[i,24] = "1"
   } 
-  else {tbbc3_19_agg[i,23] = "2"}
+  else {tbbc3_19_agg[i,24] = "2"}
 }
 
 tbbc3_19_agg$severity_new <- as.numeric(as.character(tbbc3_19_agg$severity_new))
@@ -486,16 +507,21 @@ tbbc3_19_agg %>%
   group_by(Plot) %>%
   mutate(severity_mean = mean(severity_new)) -> tbbc3_19_agg
 
+# if the mean is 0, then the mean1 should also be 0, it is the real 0
+tbbc3_19_agg1 <- tbbc3_19_agg
+tbbc3_19_agg1$mean1[is.nan(tbbc3_19_agg1$mean1)] <- 0
+
+
 # remove the check lines and calculate the correlation coefficient
 tbbc3_19_agg1 <- tbbc3_19_agg[!tbbc3_19_agg$`Plot Name` %in% checks,]
-cor.test(tbbc3_19_agg1$mean, tbbc3_19_agg1$mummi_rate, method = "pearson") # 0.1254219 
-cor.test(tbbc3_19_agg1$mean, tbbc3_19_agg1$incidence_rate, method = "pearson") # 0.8288525  
-cor.test(tbbc3_19_agg1$mummi_rate, tbbc3_19_agg1$incidence_rate, method = "pearson") #0.08670571   
+cor.test(tbbc3_19_agg1$mean, tbbc3_19_agg1$mummi_rate, method = "pearson") # 0.09024929 
+cor.test(tbbc3_19_agg1$mean, tbbc3_19_agg1$incidence_rate, method = "pearson") # 0.8282704  
+cor.test(tbbc3_19_agg1$mummi_rate, tbbc3_19_agg1$incidence_rate, method = "pearson") #0.04993093   
 # all significant, but signidicant is not important
 
-cor.test(tbbc3_19_agg1$mean1, tbbc3_19_agg1$mummi_rate1, method = "pearson") # 0.1322685   
+cor.test(tbbc3_19_agg1$mean1, tbbc3_19_agg1$mummi_rate1, method = "pearson") # 0.1243563   
 
-cor.test(tbbc3_19_agg1$mean, tbbc3_19_agg1$severity_mean, method = "pearson") # 0.2392464   
+cor.test(tbbc3_19_agg1$mean, tbbc3_19_agg1$severity_mean, method = "pearson") # 0.2322353   
 # there is some correlation between the coverage and severity for eacg plot
 ```
 
