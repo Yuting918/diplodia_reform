@@ -404,6 +404,14 @@ z025_19_agg %>%
   group_by(Plot) %>%
   mutate(severity_mean = mean(severity_new)) -> z025_19_agg
 
+# need to code for the new severity
+# if we regard a line as missing, then the according severity should also be missing 
+z025_19_agg$severity_new1 <- z025_19_agg$severity_new
+z025_19_agg$severity_new1[is.na(z025_19_agg$coverage_1)] <- NA
+z025_19_agg %>%
+  group_by(Plot) %>%
+  mutate(severity_mean1 = mean(severity_new1,na.rm = TRUE)) -> z025_19_agg
+
 z025_19_agg1 <- z025_19_agg
 z025_19_agg1$mean1[is.nan(z025_19_agg1$mean1)] <- 0
 # remove the check lines and calculate the correlation coefficient
@@ -506,6 +514,14 @@ tbbc3_19_agg$severity_new <- as.numeric(as.character(tbbc3_19_agg$severity_new))
 tbbc3_19_agg %>%
   group_by(Plot) %>%
   mutate(severity_mean = mean(severity_new)) -> tbbc3_19_agg
+
+# need to code for the new severity
+# if we regard a line as missing, then the according severity should also be missing 
+tbbc3_19_agg$severity_new1 <- tbbc3_19_agg$severity_new
+tbbc3_19_agg$severity_new1[is.na(tbbc3_19_agg$coverage_1)] <- NA
+tbbc3_19_agg %>%
+  group_by(Plot) %>%
+  mutate(severity_mean1 = mean(severity_new1,na.rm = TRUE)) -> tbbc3_19_agg
 
 # if the mean is 0, then the mean1 should also be 0, it is the real 0
 tbbc3_19_agg1 <- tbbc3_19_agg
